@@ -1,13 +1,31 @@
 
-function covar = covarinitiate(covar)
+function covar = covarIni(covar)
+% covarIni intiates the covariance structure.
+%   |covar = covarIni(covar)|
+%
+%   |covar| struct with covariance function/variogram settings
+%   |covar.model| : Covariance model. Choose amongst: 'nugget', 'triangle',
+%   'circular', 'spherical', 'cubic', 'exponential', 'gaussian', 'stable', 
+%   'power', 'k-bessel', 'logarithmic', 'cauchy', 'hyperbolic', 
+%   'cardinal sin', 'matheron' .(default: none) 
+%   |covar.var| : variance of the field. (default: 1)
+%   |sim.range0| : Range of the covariance function. This value is scaled
+%   by integral normalization and return as |sim.range|. Vector of size 
+%   equal to 
+%   |sim.azimuth| : Azimuth of the covariance. Vector of size equal to
+%   size(|sim.range0|)-1
 
+% Checking input variable
 validateattributes(covar,{'struct'},{})
 validateattributes(covar.model,{'char'},{})
-validateattributes(covar.c0,{'numeric'},{'positive','scalar'})
+if ~isfield(covar, 'var'),covar.var=1; end
+validateattributes(covar.var,{'numeric'},{'positive','scalar'})
 validateattributes(covar.range0,{'numeric'},{'vector','positive'})
 validateattributes(covar.azimuth,{'numeric'},{'vector'})
 assert(numel(covar.range0)==numel(covar.azimuth)+1,'Azimuth size need to be range-1')
 
+% Defines the covariance function |covar.g| and range normalization factor
+% |intvario|
 switch covar.model
     case 'nugget'
         covar.g = @(h,r) h==0;
@@ -70,6 +88,7 @@ switch covar.model
         error('Variogram type not defined')
 end
 
+% Normalize the covariance range for preservation of integrale.
 if numel(covar.range0)==1 || numel(intvario)==1
     covar.range=covar.range0*intvario(1);
 elseif numel(covar.range0)==2
@@ -78,6 +97,7 @@ elseif numel(covar.range0)==3
     covar.range=covar.range0*intvario(3);
 end
 
+% Define the rotation matrix with azimuth included
 if numel(covar.range)==1 || numel(covar(1).azimuth)==0
     covar.cx = 1/diag(covar.range(1));
 elseif numel(covar.range)==2
@@ -90,7 +110,11 @@ elseif numel(covar.range)==3
     covar.cx = rot/diag(fliplr(covar.range));
 end
 
-covar.gx = @(x) covar.g(squareform(pdist(x*covar.cx)))*covar.c0;
-covar.gxx0 = @(x,x0) covar.g(sqrt(sum((bsxfun(@minus,x,x0)*covar.cx).^2,2)))*covar.c0;
-covar.gx1x2 = @(x1,x2) covar.g(pdist2(x1*covar.cx,x2*covar.cx))*covar.c0;
+% Defines the un-scaled covariance function calculation for
+% covariance vector x vector (cross-covariance)
+covar.gx = @(x) covar.g(squareform(pdist(x*covar.cx)))*covar.var;
+% covariance vector x pt
+covar.gxx0 = @(x,x0) covar.g(sqrt(sum((bsxfun(@minus,x,x0)*covar.cx).^2,2)))*covar.var;
+% covariance vector1 x vector2
+covar.gx1x2 = @(x1,x2) covar.g(pdist2(x1*covar.cx,x2*covar.cx))*covar.var;
 end

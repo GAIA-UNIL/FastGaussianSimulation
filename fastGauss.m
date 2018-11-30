@@ -1,8 +1,19 @@
-function result = simField(sim, covar)
-% SIMFIELD Generate Gaussian fields.
-%   RES = SIMFIELD(sim, covar)
+function res = fastGauss(sim, covar)
+% FastGauss Generate Gaussian fields.
+%   |res = FastGauss(sim, covar)|
 %
-%   C = ADDME(A,B) adds A and B together.
+%   |sim| struct with simulation settings
+%   |sim.s| : size of grid as a vector, defines the dimension of the
+%   grid.(default: [100 100])
+%   |sim.n| : Number of simulation to perform. (default: 1)
+%   |sim.tol| : tolerance of the covariance map to include (see doc for
+%   details). (default: 0.1)
+% 
+%   |covar| struct with covariance function/variogram settings. See
+%   |covarinitiate| for documentation.
+% 
+%   |res| cell of size [sim.n x 1] with simulation field
+
 
 % Validate input
 validateattributes(sim,{'struct'},{})
@@ -16,11 +27,12 @@ validateattributes(sim.tol,{'numeric'},{'positive','nonzero','finite'})
 covar = covarinitiate(covar);
 
 % Define grid 
+x = cells(numel(sim.s),1);
 for i=1:numel(sim.s)
-    x{i}=1:sim.s(i);
+    x{i} = 1:sim.s(i);
 end  
-[X{1:numel(sim.s)}]=ndgrid(x{:});
-X =reshape(permute([X{:}],[1 3 2]),[],numel(sim.s));
+[X{1:numel(sim.s)}] = ndgrid(x{:});
+X = reshape(permute([X{:}],[1 3 2]),[],numel(sim.s));
 
 % Find the number of grids needed to reach a covariance equal to tolerance
 val=fsolve(@(h) covar.g(h)-sim.tol,1,optimset('Display','off'));
@@ -39,10 +51,11 @@ end
 % Reshape K in n-d
 K = reshape(K,sim.s);
 
-result = cell(sim.n,1);
+% Generate res in a cell
+res = cell(sim.n,1);
 fftnK = fftn(K).^.5;
 for k=1:sim.n
-    result{k}=real(ifftn(fftn(randn(sim.s)).*fftnK));
+    res{k}=real(ifftn(fftn(randn(sim.s)).*fftnK));
 end
 
 end
