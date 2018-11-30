@@ -21,13 +21,13 @@ if ~isfield(sim, 's'),sim.s=[100 100]; end
 validateattributes(sim.s,{'numeric'},{'vector','integer','positive'})
 if ~isfield(sim, 'n'),sim.n=1; end
 validateattributes(sim.n,{'numeric'},{'integer','positive','scalar'})
-if ~isfield(sim, 'tol'),sim.tol=0.1; end
+if ~isfield(sim, 'tol'),sim.tol=0.001; end
 validateattributes(sim.tol,{'numeric'},{'positive','nonzero','finite'})
 
-covar = covarinitiate(covar);
+covar = covarIni(covar);
 
 % Define grid 
-x = cells(numel(sim.s),1);
+x = cell(numel(sim.s),1);
 for i=1:numel(sim.s)
     x{i} = 1:sim.s(i);
 end  
@@ -36,8 +36,7 @@ X = reshape(permute([X{:}],[1 3 2]),[],numel(sim.s));
 
 % Find the number of grids needed to reach a covariance equal to tolerance
 val=fsolve(@(h) covar.g(h)-sim.tol,1,optimset('Display','off'));
-ring=floor((val*max(covar.range))./sim.s);
-
+ring=floor(0.5+(val*max(covar.range))./sim.s);
 % Initiate covariance kernel/matrix
 K = zeros(prod(sim.s),1);
 

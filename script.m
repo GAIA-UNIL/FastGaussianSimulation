@@ -8,7 +8,7 @@ sim.s=[100 100]; % simulation size
 sim.n=1; % number of simulation
 
 tic
-res = simField(sim,covar);
+res = fastGauss(sim,covar);
 toc
 
 for k=1:sim.n
