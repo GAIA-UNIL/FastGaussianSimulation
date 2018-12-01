@@ -23,6 +23,9 @@ if ~isfield(sim, 'n'),sim.n=1; end
 validateattributes(sim.n,{'numeric'},{'integer','positive','scalar'})
 if ~isfield(sim, 'tol'),sim.tol=0.001; end
 validateattributes(sim.tol,{'numeric'},{'positive','nonzero','finite'})
+if ~isfield(sim, 'tol'),sim.DisplayProgression=false; end
+if(~usejava('jvm')),sim.DisplayProgression=false; end
+validateattributes(sim.DisplayProgression,{'logical'},{'scalar'})
 
 covar = covarIni(covar);
 
@@ -32,7 +35,7 @@ for i=1:numel(sim.s)
     x{i} = 1:sim.s(i);
 end  
 [X{1:numel(sim.s)}] = ndgrid(x{:});
-X = reshape(permute([X{:}],[1 3 2]),[],numel(sim.s));
+X = reshape(cat(numel(sim.s)+1,X{:}),[],numel(sim.s));
 
 % Find the number of grids needed to reach a covariance equal to tolerance
 val=fsolve(@(h) covar.g(h)-sim.tol,1,optimset('Display','off'));
@@ -40,21 +43,38 @@ ring=floor(0.5+(val*max(covar.range))./sim.s);
 % Initiate covariance kernel/matrix
 K = zeros(prod(sim.s),1);
 
+if(sim.DisplayProgression)
+    h = waitbar(0,'covariance map...');
+end
 % Periodicity of the covariance
 for l=1:prod(2*ring+1)
     [position{1:numel(sim.s)}]=ind2sub(2*ring+1,l);
     position2=([position{:}] - ring-1).*sim.s+ceil(sim.s/2);
     K=K+covar.gxx0(X,position2); 
+    if(sim.DisplayProgression)
+        waitbar(l/prod(2*ring+1),h)
+    end
 end
 
 % Reshape K in n-d
 K = reshape(K,sim.s);
+
+if(sim.DisplayProgression)
+    waitbar(0,h,'simulation(s)')
+end
 
 % Generate res in a cell
 res = cell(sim.n,1);
 fftnK = fftn(K).^.5;
 for k=1:sim.n
     res{k}=real(ifftn(fftn(randn(sim.s)).*fftnK));
+    if(sim.DisplayProgression)
+        h = waitbar(k/sim.n);
+    end
+end
+
+if(sim.DisplayProgression)
+    close(h);
 end
 
 end
