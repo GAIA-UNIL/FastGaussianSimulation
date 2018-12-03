@@ -22,7 +22,6 @@ if ~isfield(covar, 'var'),covar.var=1; end
 validateattributes(covar.var,{'numeric'},{'positive','scalar'})
 validateattributes(covar.range0,{'numeric'},{'vector','positive'})
 validateattributes(covar.azimuth,{'numeric'},{'vector'})
-assert(numel(covar.range0)==numel(covar.azimuth)+1,'Azimuth size need to be range-1')
 
 % Defines the covariance function |covar.g| and range normalization factor
 % |intvario|
@@ -88,27 +87,20 @@ switch covar.model
         error('Variogram type not defined')
 end
 
-% Normalize the covariance range for preservation of integrale.
-if numel(covar.range0)==1 || numel(intvario)==1
-    covar.range=covar.range0*intvario(1);
-elseif numel(covar.range0)==2
-    covar.range=covar.range0*intvario(2);
-elseif numel(covar.range0)==3
-    covar.range=covar.range0*intvario(3);
+% Normalize range based on the type of covariance function used. The
+% integral of the covariance function over the range is 1.
+covar.range=covar.range0*intvario(min(end,numel(covar.range0)));
+
+% Build the rotational matrix
+rot=eye(numel(covar.range0));
+cang=cosd(covar.azimuth); sang=sind(covar.azimuth);
+for i=1:min(numel(covar.azimuth),numel(covar.range0)-1)
+    rot = rot * ( padarray(padarray([cang(i)-1,-sang(i);sang(i),cang(i)-1],[i-1 i-1],'pre'),[numel(covar.range0)-1-i numel(covar.range0)-1-i],'post')+eye(numel(covar.range0)));
 end
 
-% Define the rotation matrix with azimuth included
-if numel(covar.range)==1 || numel(covar(1).azimuth)==0
-    covar.cx = 1/diag(covar.range(1));
-elseif numel(covar.range)==2
-    cang=cosd(covar.azimuth); sang=sind(covar.azimuth);
-    rot = [cang,-sang;sang,cang];
-    covar.cx = rot/diag(fliplr(covar.range));
-elseif numel(covar.range)==3
-    cang=cosd(covar.azimuth); sang=sind(covar.azimuth);
-    rot = [cang(1) -sang(1) 0;sang(1) cang(1) 0; 0 0 1] * [cang(2) 0 -sang(2);0 1 0;sang(2) 0 cang(2)];
-    covar.cx = rot/diag(fliplr(covar.range));
-end
+% Combine rotation and range (normalization)
+covar.cx = rot/diag(fliplr(covar.range));
+    
 
 % Defines the un-scaled covariance function calculation for
 % covariance vector x vector (cross-covariance)
