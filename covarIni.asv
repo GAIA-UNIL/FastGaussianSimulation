@@ -10,9 +10,9 @@ function covar = covarIni(covar)
 %   'cardinal sin', 'matheron' .(default: none) 
 %   |covar.var| : variance of the field. (default: 1)
 %   |sim.range| : Range of the covariance function. Vector of size 
-%   equal to dimension
+%   equal to dimen
 %   |sim.azimuth| : Azimuth of the covariance. Vector of size equal to
-%   size(|sim.range|)-1
+%   size(|sim.range0|)-1
 
 % Checking input variable
 validateattributes(covar,{'struct'},{})
@@ -76,10 +76,10 @@ switch covar.model
 end
 
 % Build the rotational matrix
-rot=eye(numel(covar.range));
+rot=eye(numel(covar.range0));
 cang=cosd(covar.azimuth); sang=sind(covar.azimuth);
-for i=1:min(numel(covar.azimuth),numel(covar.range)-1)
-    rot = rot * ( padarray(padarray([cang(i)-1,-sang(i);sang(i),cang(i)-1],[i-1 i-1],'pre'),[numel(covar.range)-1-i numel(covar.range)-1-i],'post')+eye(numel(covar.range)));
+for i=1:min(numel(covar.azimuth),numel(covar.range0)-1)
+    rot = rot * ( padarray(padarray([cang(i)-1,-sang(i);sang(i),cang(i)-1],[i-1 i-1],'pre'),[numel(covar.range0)-1-i numel(covar.range0)-1-i],'post')+eye(numel(covar.range0)));
 end
 
 % Combine rotation and range (normalization)
