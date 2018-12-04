@@ -1,6 +1,6 @@
-function res = fastGauss(sim, covar)
-% FastGauss Generate Gaussian fields.
-%   |res = FastGauss(sim, covar)|
+function res = FGS(sim, covar)
+% Fast Gaussian Simulation (FGS) generates Gaussian fields.
+%   |res = FGS(sim, covar)|
 %
 %   |sim| struct with simulation settings
 %   |sim.s| : size of grid as a vector, defines the dimension of the
