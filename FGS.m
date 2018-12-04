@@ -8,7 +8,7 @@ function res = FGS(sim, covar)
 %   |sim.n| : Number of simulation to perform. (default: 1)
 %   |sim.tol| : Accuracy of the covariance map. For computational reason 
 %   the covariance map is only accounted up to a range where the normalized
-%   covariance value is tol.(default: 0.1)
+%   covariance value is tol.(default: 1e-6)
 % 
 %   |covar| struct with covariance function/variogram settings. See
 %   |covarinitiate| for documentation.
@@ -22,7 +22,7 @@ if ~isfield(sim, 's'),sim.s=[100 100]; end
 validateattributes(sim.s,{'numeric'},{'vector','integer','positive'})
 if ~isfield(sim, 'n'),sim.n=1; end
 validateattributes(sim.n,{'numeric'},{'integer','positive','scalar'})
-if ~isfield(sim, 'tol'),sim.tol=0.001; end
+if ~isfield(sim, 'tol'),sim.tol=1e-6; end
 validateattributes(sim.tol,{'numeric'},{'positive','nonzero','finite'})
 if ~isfield(sim, 'DisplayProgression'),sim.DisplayProgression=false; end
 if(~usejava('jvm')),sim.DisplayProgression=false; end
@@ -42,7 +42,7 @@ end
 X = reshape(cat(numel(sim.s)+1,X{:}),[],numel(sim.s));
 
 % Find the number of grids needed to reach a covariance equal to tolerance
-val=fsolve(@(h) covar.g(h)-sim.tol,1,optimset('Display','off'));
+val=fsolve(@(h) covar.g(h)-sim.tol,1,optimset('Display','off','TolFun',sim.tol/10));
 ring=floor(0.5+(val*max(covar.range))./sim.s);
 
 % Initiate covariance kernel/matrix
