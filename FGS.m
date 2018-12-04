@@ -73,7 +73,7 @@ end
 res = cell(sim.n,1);
 fftnK = fftn(K).^.5;
 for k=1:sim.n
-    res{k}=real(ifftn(fftn(covar.c0*randn(sim.s)).*fftnK));
+    res{k}=real(ifftn(fftn(covar.var*randn(sim.s)).*fftnK));
     if(sim.DisplayProgression)
         h = waitbar(k/sim.n);
     end
