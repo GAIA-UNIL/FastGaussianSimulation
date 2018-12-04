@@ -6,8 +6,9 @@ function res = FGS(sim, covar)
 %   |sim.s| : size of grid as a vector, defines the dimension of the
 %   grid.(default: [100 100])
 %   |sim.n| : Number of simulation to perform. (default: 1)
-%   |sim.tol| : tolerance of the covariance map to include (see doc for
-%   details). (default: 0.1)
+%   |sim.tol| : Accuracy of the covariance map. For computational reason 
+%   the covariance map is only accounted up to a range where the normalized
+%   covariance value is tol.(default: 0.1)
 % 
 %   |covar| struct with covariance function/variogram settings. See
 %   |covarinitiate| for documentation.
@@ -26,6 +27,9 @@ validateattributes(sim.tol,{'numeric'},{'positive','nonzero','finite'})
 if ~isfield(sim, 'DisplayProgression'),sim.DisplayProgression=false; end
 if(~usejava('jvm')),sim.DisplayProgression=false; end
 % validateattributes(sim.DisplayProgression,{},{'scalar'})
+if ~isfield(sim, 'seed'),sim.seed='shuffle'; end
+
+rng(sim.seed)
 
 covar = covarIni(covar);
 
