@@ -18,8 +18,8 @@ function covar = covarIni(covar)
 validateattributes(covar,{'struct'},{})
 validateattributes(covar.model,{'char'},{})
 if ~isfield(covar, 'var'),covar.var=1; end
-validateattributes(covar.var,{'numeric'},{'positive','scalar'})
-validateattributes(covar.range,{'numeric'},{'vector','positive'})
+validateattributes(covar.var,{'numeric'},{'nonnegative','scalar'})
+validateattributes(covar.range,{'numeric'},{'vector','nonnegative'})
 validateattributes(covar.azimuth,{'numeric'},{'vector'})
 
 % Defines the covariance function |covar.g|
