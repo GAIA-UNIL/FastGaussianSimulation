@@ -2,6 +2,7 @@ function res = FGS(sim, covar)
 % Fast Gaussian Simulation (FGS) generates Gaussian fields.
 %   |res = FGS(sim, covar)|
 %
+%   INPUT:
 %   |sim| struct with simulation settings
 %   |sim.s| : size of grid as a vector, defines the dimension of the
 %   grid.(default: [100 100])
@@ -9,10 +10,14 @@ function res = FGS(sim, covar)
 %   |sim.tol| : Accuracy of the covariance map. For computational reason 
 %   the covariance map is only accounted up to a range where the normalized
 %   covariance value is tol.(default: 1e-6)
+%   |sim.DisplayProgression| : Display a progression bar (default: false)
+%   |sim.seed| : Control random number generation: 'default', 'shuffle' or 
+%   a number. (default: 'shuffle')
 % 
 %   |covar| struct with covariance function/variogram settings. See
-%   |covarinitiate| for documentation.
+%   |covarIni.m| for documentation.
 % 
+%   OUTPUT:
 %   |res| cell of size [sim.n x 1] with simulation field
 
 
@@ -29,11 +34,13 @@ if(~usejava('jvm')),sim.DisplayProgression=false; end
 % validateattributes(sim.DisplayProgression,{},{'scalar'})
 if ~isfield(sim, 'seed'),sim.seed='shuffle'; end
 
+% Control random number generation
 rng(sim.seed)
 
+% Initialization of the covariance structure. See |covarIni.m| for doc.
 covar = covarIni(covar);
 
-% Define grid 
+% Define grid X
 x = cell(numel(sim.s),1);
 for i=1:numel(sim.s)
     x{i} = 1:sim.s(i);
@@ -43,11 +50,15 @@ X = reshape(cat(numel(sim.s)+1,X{:}),[],numel(sim.s));
 
 % Find the number of grids needed to reach a covariance equal to tolerance
 val=fsolve(@(h) covar.g(h)-sim.tol,1,optimset('Display','off','TolFun',sim.tol/10));
-ring=floor(0.5+(val*max(covar.range))./sim.s);
+% ring=floor(0.5+(val*max(covar.range))./sim.s);
+d = max(abs(mrdivide(val*eye(numel(sim.s)),covar.cx)));
+ring = floor(0.5+d./sim.s);
+
 
 % Initiate covariance kernel/matrix
 K = zeros(prod(sim.s),1);
 
+% Display bar
 if(sim.DisplayProgression)
     h = waitbar(0,'covariance map...');
 end
