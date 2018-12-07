@@ -54,16 +54,14 @@ if(sim.DisplayProgression)
     h = waitbar(0,'covariance map...');
 end
 
+% Loop over the covariance structures 
 for i_c=1:numel(covar)
-    
     % Initialization of the covariance structure. See |covarIni.m| for doc.
     c = covarIni(covar(i_c));
     
     % Find the number of grids needed to reach a covariance equal to tolerance
     val=fsolve(@(h) c.g(h)-sim.tol,1,optimset('Display','off','TolFun',sim.tol/10));
-    % ring=floor(0.5+(val*max(covar.range))./sim.s);
-    d = max(abs(mrdivide(val*eye(numel(sim.s)),c.cx)));
-    ring = floor(0.5+d./sim.s);
+    ring = floor(0.5+max(abs(mrdivide(val*eye(numel(sim.s)),c.cx)))./sim.s);
 
     % Periodicity of the covariance
     for l=1:prod(2*ring+1)

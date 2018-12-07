@@ -19,7 +19,7 @@ validateattributes(covar,{'struct'},{})
 validateattributes(covar.model,{'char'},{})
 if ~isfield(covar, 'var')||isempty(covar.var),covar.var=1; end
 validateattributes(covar.var,{'numeric'},{'nonnegative','scalar'})
-validateattributes(covar.range,{'numeric'},{'vector','nonnegative'})
+validateattributes(covar.range,{'numeric'},{'vector','positive'})
 if ~isfield(covar,'azimuth')||isempty(covar.azimuth),covar.azimuth=0; end
 validateattributes(covar.azimuth,{'numeric'},{'vector'})
 
@@ -84,7 +84,7 @@ for i=1:min(numel(covar.azimuth),numel(covar.range)-1)
 end
 
 % Combine rotation and range (normalization)
-covar.cx = diag(covar.range)^-1*rot;
+covar.cx = rot/diag(covar.range);
 
 % Defines the un-scaled covariance function calculation for
 % covariance vector x vector (cross-covariance)
