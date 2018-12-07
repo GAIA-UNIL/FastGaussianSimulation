@@ -17,9 +17,10 @@ function covar = covarIni(covar)
 % Checking input variable
 validateattributes(covar,{'struct'},{})
 validateattributes(covar.model,{'char'},{})
-if ~isfield(covar, 'var'),covar.var=1; end
+if ~isfield(covar, 'var')||isempty(covar.var),covar.var=1; end
 validateattributes(covar.var,{'numeric'},{'nonnegative','scalar'})
 validateattributes(covar.range,{'numeric'},{'vector','nonnegative'})
+if ~isfield(covar,'azimuth')||isempty(covar.azimuth),covar.azimuth=0; end
 validateattributes(covar.azimuth,{'numeric'},{'vector'})
 
 % Defines the covariance function |covar.g|
@@ -83,8 +84,7 @@ for i=1:min(numel(covar.azimuth),numel(covar.range)-1)
 end
 
 % Combine rotation and range (normalization)
-covar.cx = rot/diag(fliplr(covar.range));
-    
+covar.cx = diag(covar.range)^-1*rot;
 
 % Defines the un-scaled covariance function calculation for
 % covariance vector x vector (cross-covariance)
